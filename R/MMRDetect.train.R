@@ -1,65 +1,29 @@
-# Train MMRDetect
+#' Train MMRDetect
+#'
+#' @param mutationVariable A list of input variables,"Del_rep_mean","RepIndel_num","MMR_sum","maxcossim"
+#' @param classification Sample classification
+#' @return trained model
 
-MMRDetectTC.train <- function(mutationVariable, classification, cancerType = NULL) {
+#' @export
+MMRDetect.train <- function(mutationVariable, classification) {
   
   
   ## match the data with classification
-  trainset = mutationVariable
+  trainset = mutationVariable[,c("Sample","Del_rep_mean","RepIndel_num","MMR_sum","maxcossim")]
   trainset = merge(trainset, classification[,c("Sample","MSI_status")], by="Sample")
   
   if(nrow(trainset)<50){
     warning('training set size < 50')  
   }
   
-  ## build model with trainset
-  trainset$MSI_status<-as.factor(trainset$MSI_status)
-  tree.model = J48(MSI_status ~ . , data=trainset[,c("CDel_rep_mean","CIns_rep_mean","TDel_rep_mean","TIns_rep_mean","MMR_sum","MSI_status")])
-  
-  tree.eval = evaluate_Weka_classifier(tree.model, numFolds = 5, seed = 1)
-  cat('5 fold cross validation result: ',unname(tree.eval$detail[1]), '\n', sep='')
-  tree.model
-  
-}
-
-MMRDetect.train <- function(mutationVariable, classification, cancerType = NULL) {
-  
-  
-  ## match the data with classification
-  trainset = mutationVariable
-  trainset = merge(trainset, classification[,c("Sample","MSI_status")], by="Sample")
-  
-  if(nrow(trainset)<50){
-    warning('training set size < 50')  
-  }
+  # normalize RepIndel_num and MMR_sum
+  trainset$RepIndel_num <- trainset$RepIndel_num/max(trainset$RepIndel_num)
+  trainset$MMR_sum <- trainset$RepIndel_num/max(trainset$MMR_sum)
   
   ## build model with trainset
   trainset$MSI_status<-as.factor(trainset$MSI_status)
-  tree.model = J48(MSI_status ~ . , data=trainset[,c("Del_rep_mean","Ins_rep_mean","MMR_sum","RepIndel_num","MSI_status")])
-  
-  tree.eval = evaluate_Weka_classifier(tree.model, numFolds = 5, seed = 1)
-  cat('5 fold cross validation result: ',unname(tree.eval$detail[1]), '\n', sep='')
-  tree.model
+  glm_model_logit = glm(MSI_status~., data = trainset, family = binomial(link="logit"))
+  glm_model_logit
   
 }
 
-
-MMRDetect.train <- function(mutationVariable, classification, cancerType = NULL) {
-  
-  
-  ## match the data with classification
-  trainset = mutationVariable
-  trainset = merge(trainset, classification[,c("Sample","MSI_status")], by="Sample")
-  
-  if(nrow(trainset)<50){
-    warning('training set size < 50')  
-  }
-  
-  ## build model with trainset
-  trainset$MSI_status<-as.factor(trainset$MSI_status)
-  tree.model = J48(MSI_status ~ . , data=trainset[,c("Del_rep_mean","Ins_rep_mean","MMR_sum","MSI_status")])
-  
-  tree.eval = evaluate_Weka_classifier(tree.model, numFolds = 5, seed = 1)
-  cat('5 fold cross validation result: ',unname(tree.eval$detail[1]), '\n', sep='')
-  tree.model
-  
-}

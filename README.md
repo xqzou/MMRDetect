@@ -2,7 +2,7 @@
 
 ## Overview
 
-MMRDetect is a mutational signature-based classifier for identifying cancers with mismatch repair deficiency.
+MMRDetect is a mutational signature-based classifier for identifying tumors with mismatch repair deficiency using whole-genome sequencing data.
 
 
 ## Installation
@@ -17,3 +17,5 @@ devtools::install_github("r-lib/MMRDetect")
 
 
 ## Usage
+
+

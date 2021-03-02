@@ -1,34 +1,16 @@
-MMRDetectTC.classify <- function(mutationVariable, classifier = MMRDclassifier) {
-  classifyset = mutationVariable[,c("CDel_rep_mean","CIns_rep_mean","TDel_rep_mean","TIns_rep_mean","MMR_sum")]
-  
-  
-  classify.result = predict(classifier, newdata=classifyset, type="class")
-  result = as.data.frame(cbind(rownames(classifyset), 
-                               as.character(classify.result)))
-  colnames(result) = c("Sample", "MSI_status")
-  result
-} 
+#' MMRDetect classifier
+#'
+#' @param mutationVariable A list of input variables,"Del_rep_mean","RepIndel_num","MMR_sum","maxcossim"
+#' @param classifier provided classifier
+#' @return classification result
 
+#' @export
 MMRDetect.classify <- function(mutationVariable, classifier = MMRDclassifier) {
-  classifyset = mutationVariable[,c("Del_rep_mean","Ins_rep_mean","MMR_sum","RepIndel_num")]
+  classifyset = mutationVariable[,c("Del_rep_mean","RepIndel_num","MMR_sum","maxcossim")]
   
+  classifyset$RepIndel_num <- classifyset$RepIndel_num/max(classifyset$RepIndel_num)
+  classifyset$MMR_sum <- classifyset$MMR_sum/max(classifyset$MMR_sum)
   
-  classify.result = predict(classifier, newdata=classifyset, type="class")
-  result = as.data.frame(cbind(rownames(classifyset), 
-                               as.character(classify.result)))
-  colnames(result) = c("Sample", "MSI_status")
-  result
-} 
-
-
-
-MMRDetect.classify <- function(mutationVariable, classifier = MMRDclassifier) {
-  classifyset = mutationVariable[,c("Del_rep_mean","Ins_rep_mean","MMR_sum")]
-  
-  
-  classify.result = predict(classifier, newdata=classifyset, type="class")
-  result = as.data.frame(cbind(rownames(classifyset), 
-                               as.character(classify.result)))
-  colnames(result) = c("Sample", "MSI_status")
-  result
+  mutationVariable$glm_prob = predict.glm(classifier, newdata=classifyset, type="response")
+  return(mutationVariable)
 } 

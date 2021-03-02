@@ -8,12 +8,14 @@ library("VariantAnnotation")
 library('GenomicFeatures')
 library(BSgenome.Hsapiens.UCSC.hg19)
 library(signature.tools.lib)
+library("glmnet")
 
-
-load("/Users/xz388/Documents/GitHub/MMRDetect/data/MMRKO_indelsigCT.rda")
-load("/Users/xz388/Documents/GitHub/MMRDetect/data/indelsig_template.rda")
-load("/Users/xz388/Documents/GitHub/MMRDetect/data/MMRKO_indelsig.rda")
-
+load("../data/MMRKO_indelsigCT.rda")
+load("../data/indelsig_template.rda")
+load("../data/MMRKO_indelsig.rda")
+load("../data/MMRKO_subsig.rda")
+load("../data/PancanSig.rda")
+MMRDclassifier <- readRDS("../data/MMRDetect.rds")
 #' Generate 96 channel catalogue for substitutions
 #'
 #' @param CTsubs A list of substitutions: Chrom, Pos, Ref, Alt, Sample column
@@ -44,7 +46,7 @@ GenCatalogue <- function(CTsubs, SampleCol){
   }
   
   muttype_freq_template <- data.frame("MutationType"=mutationtype)
-  muttype_freq_template$Mutation <- substr(muttype_freq_template$MutationType,3,5)
+ # muttype_freq_template$Mutation <- substr(muttype_freq_template$MutationType,3,5)
   #read.table("./MutationType_template.txt", sep = "\t", header = T, as.is = T)
   
   CTsubs_copy <- CTsubs
@@ -96,7 +98,6 @@ indel_classifier <- function(indels){
   
   indel.classified_details[indel.classified_details$Chrom=="X","Chrom"]=23
   indel.classified_details[indel.classified_details$Chrom=="Y","Chrom"]=24
- # indel_templateMMR <- read.table("../../00_common/indel_templateMMRD.txt",sep = "\t",header = T, as.is = T)
   indel_template2 <- indelsig_template
   names(indel_template2)[1] <- c("Subtype")
   indel.classified_details <- merge(indel.classified_details,indel_template2,by="Subtype")
@@ -145,21 +146,7 @@ prepare.indel.df.tab <- function(indel.data) {
     indel.data[indel.data$Type=="Del","slice3_1bp"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Del","Chrom"]), indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1, indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1))
     indel.data[indel.data$Type=="Ins","slice3_1bp"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Ins","Chrom"]), indel.data[indel.data$Type=="Ins","Pos"]+1, indel.data[indel.data$Type=="Ins","Pos"]+1))
     
-    # 2bp before and after change                     
-    
-    #    indel.data$slice5_2bp <- as.character(getSeq(Hsapiens, paste0('chr',indel.data$Chrom), indel.data$Pos-1, indel.data$Pos))
-    #    indel.data$slice3_2bp <- NULL
-    #    indel.data[indel.data$Type=="Del","slice3_2bp"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Del","Chrom"]), indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1, indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+2))
-    #    indel.data[indel.data$Type=="Ins","slice3_2bp"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Ins","Chrom"]), indel.data[indel.data$Type=="Ins","Pos"]+1, indel.data[indel.data$Type=="Ins","Pos"]+2))
-    
-    
-    # 3bp before and after change                     
-    
-    #    indel.data$slice5_3bp <- as.character(getSeq(Hsapiens, paste0('chr',indel.data$Chrom), indel.data$Pos-2, indel.data$Pos))
-    #    indel.data$slice3_3bp <- NULL
-    #    indel.data[indel.data$Type=="Del","slice3_3bp"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Del","Chrom"]), indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1, indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+3))
-    #    indel.data[indel.data$Type=="Ins","slice3_3bp"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Ins","Chrom"]), indel.data[indel.data$Type=="Ins","Pos"]+1, indel.data[indel.data$Type=="Ins","Pos"]+3))
-    
+   
     # Pyrimidine represnetation for 1bp indels
     indel.data$change.pyr <- indel.data$change
     indel.data$slice3_1bp_pyr <- indel.data$slice3_1bp
@@ -172,25 +159,13 @@ prepare.indel.df.tab <- function(indel.data) {
     indel.data[indel.data$change=="A","slice5_1bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="A","slice3_1bp"])))
     indel.data[indel.data$change=="A","slice3_1bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="A","slice5_1bp"])))
     
-    #    indel.data[indel.data$change=="A","slice5_2bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="A","slice3_2bp"])))
-    #    indel.data[indel.data$change=="A","slice3_2bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="A","slice5_2bp"])))
-    
+  
     
     indel.data[indel.data$change=="G","change.pyr"] <- "C"
     indel.data[indel.data$change=="G","slice5_1bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="G","slice3_1bp"])))
     indel.data[indel.data$change=="G","slice3_1bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="G","slice5_1bp"])))
     
-    #    indel.data[indel.data$change=="G","slice5_2bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="G","slice3_2bp"])))
-    #    indel.data[indel.data$change=="G","slice3_2bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="G","slice5_2bp"])))
-    
-    
-    # indel.df needs following columns:
-    # indel.type
-    # change
-    # slice3
-    # slice5
-    # indel.length
-    
+   
     return(indel.data)
     
     
@@ -365,6 +340,7 @@ subtype_indel_mmrd <- function(indel.df) {
 }
 
 #' micro-homology between the deleted sequence and 3' sequence (number of bases)
+#' 
 #' @param d A list of indels with flanking sequence information: Chrom, Pos, Ref, Alt, Sample column
 #' @return annotated indels
 
@@ -523,9 +499,7 @@ tandemcount_v2 <- function(pat,string) {
   
 }
 
-# ----------------------------------------------------------
-# This finds the smallest repeating subunit of the deletion
-# ----------------------------------------------------------
+#' This finds the smallest repeating subunit of the deletion
 findsmallestrep <- function(d) {
   d.factors <- as.numeric(sort(unlist(get_all_factors(nchar(d))), decreasing=TRUE))
   rep.unit <- ''
@@ -539,7 +513,7 @@ findsmallestrep <- function(d) {
   }
   rep.unit
 }
-# get all factors of an integer
+#' get all factors of an integer
 get_all_factors <- function(n)
 {
   prime_factor_tables <- lapply(
@@ -560,6 +534,7 @@ get_all_factors <- function(n)
     }
   )
 }
+
 finalcaller <- function(mhcount, replength, rept) {
   # mhcount
   # replength
@@ -584,6 +559,14 @@ finalcaller <- function(mhcount, replength, rept) {
   
 }
 
+#' Generate 45 channel indel catalogue
+#' 
+#' @param muts_list A list of indels with flanking sequence information: Chrom, Pos, Ref, Alt, Sample column
+#' @param Sample_col Sample column name
+#' @param muttype_col indel classification column name
+#' @return Indel catalogue
+
+#' @export
 gen_indelmuttype_MMRD <- function(muts_list, Sample_col, muttype_col){
   indel_template <- indelsig_template
   indel_template_uniq <- unique(indel_template[,c(muttype_col,"type")])
