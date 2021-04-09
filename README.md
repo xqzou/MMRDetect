@@ -8,7 +8,7 @@ MMRDetect is a mutational signature-based classifier for identifying tumors with
 ## Installation
 
 ```{r, eval = FALSE}
-# Install the released version from CRAN
+# Install the released version from Github
 git clone https://github.com/xqzou/MMRDetect.git
 cd MMRDetect
 R CMD INSTALL .
