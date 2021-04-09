@@ -22,7 +22,7 @@ MMRDetect.train <- function(mutationVariable, classification) {
   
   ## build model with trainset
   trainset$MSI_status<-as.factor(trainset$MSI_status)
-  glm_model_logit = glmnet::glm(MSI_status~., data = trainset, family = binomial(link="logit"))
+  glm_model_logit = stats::glm(MSI_status~., data = trainset, family = binomial(link="logit"))
   glm_model_logit
   
 }

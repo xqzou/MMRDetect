@@ -116,9 +116,9 @@ MMRDetect.compute.subcatalogue.exposure <- function(sub_cat, tissue_type,MMR_sub
   MMRsig_sample <- sample_exposure[which(rownames(sample_exposure) %in% c(tissue_MMR1Sig, tissue_MMR2Sig,"MMR2","MMR1")),]
   
   MMRsig_sample$AndreaSig <- rownames(MMRsig_sample)
-  MMRsig_sample_melt <- melt(MMRsig_sample,c("AndreaSig"))
+  MMRsig_sample_melt <- reshape2::melt(MMRsig_sample,c("AndreaSig"))
   names(MMRsig_sample_melt) <- c("AndreaSig","Sample","exposure")
-  MMRsig_sample_melt_dcast <- dcast(MMRsig_sample_melt,Sample~AndreaSig,value.var="exposure")
+  MMRsig_sample_melt_dcast <- reshape2::dcast(MMRsig_sample_melt,Sample~AndreaSig,value.var="exposure")
   
   if(dim(MMRsig_sample_melt_dcast)[2]==2){
     MMRsig_sample_melt_dcast$MMR_sum <- MMRsig_sample_melt_dcast[,-1]
@@ -174,8 +174,8 @@ MMRDetect.compute.Repindel.similarity <- function(indels, tissue_type,MMR_sig_in
   cossim_allsample$Sample <- cossim_sample
   cossim_allsample$MMRgene <- cossim_MMR
   
-  Del_rep_mean <- ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Del_rep_mean=mean(Del_rep),Del_rep_sd=sd(Del_rep))
-  Ins_rep_mean <- ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Ins_rep_mean=mean(Ins_rep),Ins_rep_sd=sd(Ins_rep))
+  Del_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Del_rep_mean=mean(Del_rep),Del_rep_sd=sd(Del_rep))
+  Ins_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Ins_rep_mean=mean(Ins_rep),Ins_rep_sd=sd(Ins_rep))
   
   MMRsig_2 <- merge(Del_rep_mean[,c("Sample","Del_rep_mean")],Ins_rep_mean[,c("Sample","Ins_rep_mean")],by="Sample")
   MMRsig_2 <- merge(Sample_MMR,MMRsig_2, by="Sample")
@@ -223,8 +223,8 @@ MMRDetect.compute.Repindelcatalogue.similarity <- function(indel_cat, tissue_typ
   cossim_allsample$Sample <- cossim_sample
   cossim_allsample$MMRgene <- cossim_MMR
   
-  Del_rep_mean <- ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Del_rep_mean=mean(Del_rep),Del_rep_sd=sd(Del_rep))
-  Ins_rep_mean <- ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Ins_rep_mean=mean(Ins_rep),Ins_rep_sd=sd(Ins_rep))
+  Del_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Del_rep_mean=mean(Del_rep),Del_rep_sd=sd(Del_rep))
+  Ins_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Ins_rep_mean=mean(Ins_rep),Ins_rep_sd=sd(Ins_rep))
   
   MMRsig_2 <- merge(Del_rep_mean[,c("Sample","Del_rep_mean")],Ins_rep_mean[,c("Sample","Ins_rep_mean")],by="Sample")
   MMRsig_2 <- merge(Sample_MMR,MMRsig_2, by="Sample")
@@ -329,8 +329,6 @@ SigCossim <- function(mcat, sigx){
 #' 
 #' @return variables
 #' 
-#' @examples 
-#' MMRDetect.compute.variables(sub_catalogues, indel_catalogues, "Breast")
 #' @export
 MMRDetect.compute.variables <- function(sub_cat, indel_cat, tissue_type,MMR_subsig96=MMRKO_subsig,MMR_sig_indel=MMRKO_indelsig, tissue_subsig96=PancanSig){
   

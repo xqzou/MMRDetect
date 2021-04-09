@@ -32,6 +32,3 @@ variables
 \description{
 Compute variables for MMRDetect
 }
-\examples{
-MMRDetect.compute.variables(sub_catalogues, indel_catalogues, "Breast")
-}

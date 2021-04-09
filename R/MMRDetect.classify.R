@@ -21,6 +21,6 @@ MMRDetect.classify <- function(mutationVariable, classifier = MMRDclassifier) {
   classifyset$RepIndel_num <- classifyset$RepIndel_num/max(classifyset$RepIndel_num)
   classifyset$MMR_sum <- classifyset$MMR_sum/max(classifyset$MMR_sum)
   
-  mutationVariable$glm_prob = glmnet::predict.glm(classifier, newdata=classifyset, type="response")
+  mutationVariable$glm_prob = stats::predict.glm(classifier, newdata=classifyset, type="response")
   return(mutationVariable)
 } 
