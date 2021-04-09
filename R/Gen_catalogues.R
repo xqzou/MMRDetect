@@ -29,8 +29,8 @@ GenCatalogue <- function(CTsubs, SampleCol){
   CTsubs[CTsubs$Chrom=="24","Chrom"]="Y"
   
   # add 5' and 3' base information 
-  CTsubs$pre_context <- as.character(BSgenome.Hsapiens.UCSC.hg19::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',CTsubs$Chrom), CTsubs$Pos-1, CTsubs$Pos-1))
-  CTsubs$rear_context <- as.character(BSgenome.Hsapiens.UCSC.hg19::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',CTsubs$Chrom), CTsubs$Pos+1, CTsubs$Pos+1))
+  CTsubs$pre_context <- as.character(Biostrings::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',CTsubs$Chrom), CTsubs$Pos-1, CTsubs$Pos-1))
+  CTsubs$rear_context <- as.character(Biostrings::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',CTsubs$Chrom), CTsubs$Pos+1, CTsubs$Pos+1))
   
   mutation <- c("C>A","C>G","C>T","T>A","T>C","T>G")
   base <- c("A","C","G","T")
@@ -135,16 +135,16 @@ prepare.indel.df.tab <- function(indel.data) {
     indel.data$extend3 = indel.data$Pos+indel.data$indel.length + indel.data$indel.length+25;
     
     
-    indel.data$slice5 <- as.character(getSeq(Hsapiens, paste0('chr',indel.data$Chrom), indel.data$extend5, indel.data$Pos))
+    indel.data$slice5 <- as.character(Biostrings::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',indel.data$Chrom), indel.data$extend5, indel.data$Pos))
     indel.data$slice3 <- NULL
-    indel.data[indel.data$Type=="Del","slice3"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Del","Chrom"]), indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1, indel.data[indel.data$Type=="Del","extend3"]))
-    indel.data[indel.data$Type=="Ins","slice3"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Ins","Chrom"]), indel.data[indel.data$Type=="Ins","Pos"]+1, indel.data[indel.data$Type=="Ins","extend3"]))
+    indel.data[indel.data$Type=="Del","slice3"] <- as.character(Biostrings::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',indel.data[indel.data$Type=="Del","Chrom"]), indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1, indel.data[indel.data$Type=="Del","extend3"]))
+    indel.data[indel.data$Type=="Ins","slice3"] <- as.character(Biostrings::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',indel.data[indel.data$Type=="Ins","Chrom"]), indel.data[indel.data$Type=="Ins","Pos"]+1, indel.data[indel.data$Type=="Ins","extend3"]))
     
     # 1bp before and after change                     
-    indel.data$slice5_1bp <- as.character(getSeq(Hsapiens, paste0('chr',indel.data$Chrom), indel.data$Pos, indel.data$Pos))
+    indel.data$slice5_1bp <- as.character(Biostrings::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',indel.data$Chrom), indel.data$Pos, indel.data$Pos))
     indel.data$slice3_1bp <- NULL
-    indel.data[indel.data$Type=="Del","slice3_1bp"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Del","Chrom"]), indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1, indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1))
-    indel.data[indel.data$Type=="Ins","slice3_1bp"] <- as.character(getSeq(Hsapiens, paste0('chr',indel.data[indel.data$Type=="Ins","Chrom"]), indel.data[indel.data$Type=="Ins","Pos"]+1, indel.data[indel.data$Type=="Ins","Pos"]+1))
+    indel.data[indel.data$Type=="Del","slice3_1bp"] <- as.character(Biostrings::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',indel.data[indel.data$Type=="Del","Chrom"]), indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1, indel.data[indel.data$Type=="Del","Pos"]+indel.data[indel.data$Type=="Del","indel.length"]+1))
+    indel.data[indel.data$Type=="Ins","slice3_1bp"] <- as.character(Biostrings::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',indel.data[indel.data$Type=="Ins","Chrom"]), indel.data[indel.data$Type=="Ins","Pos"]+1, indel.data[indel.data$Type=="Ins","Pos"]+1))
     
    
     # Pyrimidine represnetation for 1bp indels
@@ -156,14 +156,14 @@ prepare.indel.df.tab <- function(indel.data) {
     #    indel.data$slice5_2bp_pyr <- indel.data$slice5_2bp
     
     indel.data[indel.data$change=="A","change.pyr"] <- "T"
-    indel.data[indel.data$change=="A","slice5_1bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="A","slice3_1bp"])))
-    indel.data[indel.data$change=="A","slice3_1bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="A","slice5_1bp"])))
+    indel.data[indel.data$change=="A","slice5_1bp_pyr"] <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(indel.data[indel.data$change=="A","slice3_1bp"])))
+    indel.data[indel.data$change=="A","slice3_1bp_pyr"] <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(indel.data[indel.data$change=="A","slice5_1bp"])))
     
   
     
     indel.data[indel.data$change=="G","change.pyr"] <- "C"
-    indel.data[indel.data$change=="G","slice5_1bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="G","slice3_1bp"])))
-    indel.data[indel.data$change=="G","slice3_1bp_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.data[indel.data$change=="G","slice5_1bp"])))
+    indel.data[indel.data$change=="G","slice5_1bp_pyr"] <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(indel.data[indel.data$change=="G","slice3_1bp"])))
+    indel.data[indel.data$change=="G","slice3_1bp_pyr"] <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(indel.data[indel.data$change=="G","slice5_1bp"])))
     
    
     return(indel.data)
@@ -248,10 +248,10 @@ mh_indel_v2 <- function(indel.df) {
     indel.df$slice3_nonrep <- slice3_nonrep_all
     indel.df$slice3_nonrep_pyr <- indel.df$slice3_nonrep
     indel.df$slice5_nonrep_pyr <- indel.df$slice5_1bp_pyr
-    indel.df[indel.df$change=="A","slice5_nonrep_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.df[indel.df$change=="A","slice3_nonrep"])))
-    indel.df[indel.df$change=="A","slice3_nonrep_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.df[indel.df$change=="A","slice5_1bp"])))
-    indel.df[indel.df$change=="G","slice5_nonrep_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.df[indel.df$change=="G","slice3_nonrep"])))
-    indel.df[indel.df$change=="G","slice3_nonrep_pyr"] <- as.character(reverseComplement(DNAStringSet(indel.df[indel.df$change=="G","slice5_1bp"])))
+    indel.df[indel.df$change=="A","slice5_nonrep_pyr"] <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(indel.df[indel.df$change=="A","slice3_nonrep"])))
+    indel.df[indel.df$change=="A","slice3_nonrep_pyr"] <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(indel.df[indel.df$change=="A","slice5_1bp"])))
+    indel.df[indel.df$change=="G","slice5_nonrep_pyr"] <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(indel.df[indel.df$change=="G","slice3_nonrep"])))
+    indel.df[indel.df$change=="G","slice3_nonrep_pyr"] <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(indel.df[indel.df$change=="G","slice5_1bp"])))
     
     
     indel.df$classification <- classification
@@ -573,7 +573,7 @@ gen_indelmuttype_MMRD <- function(muts_list, Sample_col, muttype_col){
   names(indel_template_uniq) <- c("indelsubtype","type")
   indel_catalogue <- data.frame(table(muts_list[,Sample_col],muts_list[,muttype_col]))
   names(indel_catalogue) <- c("subclone","indelsubtype","freq")
-  indel_catalogue <- dcast(indel_catalogue,indelsubtype~subclone,value.var="freq")
+  indel_catalogue <- reshape2::dcast(indel_catalogue,indelsubtype~subclone,value.var="freq")
   indel_catalogue <- merge(indel_template_uniq,indel_catalogue,by="indelsubtype",all.x=T)
   indel_catalogue[is.na(indel_catalogue)] <- 0
   return(indel_catalogue)

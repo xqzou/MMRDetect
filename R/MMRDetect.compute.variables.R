@@ -174,8 +174,8 @@ MMRDetect.compute.Repindel.similarity <- function(indels, tissue_type,MMR_sig_in
   cossim_allsample$Sample <- cossim_sample
   cossim_allsample$MMRgene <- cossim_MMR
   
-  Del_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Del_rep_mean=mean(Del_rep),Del_rep_sd=sd(Del_rep))
-  Ins_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Ins_rep_mean=mean(Ins_rep),Ins_rep_sd=sd(Ins_rep))
+  Del_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),plyr::summarise,N=length(Sample),Del_rep_mean=mean(Del_rep),Del_rep_sd=sd(Del_rep))
+  Ins_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),plyr::summarise,N=length(Sample),Ins_rep_mean=mean(Ins_rep),Ins_rep_sd=sd(Ins_rep))
   
   MMRsig_2 <- merge(Del_rep_mean[,c("Sample","Del_rep_mean")],Ins_rep_mean[,c("Sample","Ins_rep_mean")],by="Sample")
   MMRsig_2 <- merge(Sample_MMR,MMRsig_2, by="Sample")
@@ -223,8 +223,8 @@ MMRDetect.compute.Repindelcatalogue.similarity <- function(indel_cat, tissue_typ
   cossim_allsample$Sample <- cossim_sample
   cossim_allsample$MMRgene <- cossim_MMR
   
-  Del_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Del_rep_mean=mean(Del_rep),Del_rep_sd=sd(Del_rep))
-  Ins_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),summarise,N=length(Sample),Ins_rep_mean=mean(Ins_rep),Ins_rep_sd=sd(Ins_rep))
+  Del_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),plyr::summarise,N=length(Sample),Del_rep_mean=mean(Del_rep),Del_rep_sd=sd(Del_rep))
+  Ins_rep_mean <- plyr::ddply(cossim_allsample,c("Sample"),plyr::summarise,N=length(Sample),Ins_rep_mean=mean(Ins_rep),Ins_rep_sd=sd(Ins_rep))
   
   MMRsig_2 <- merge(Del_rep_mean[,c("Sample","Del_rep_mean")],Ins_rep_mean[,c("Sample","Ins_rep_mean")],by="Sample")
   MMRsig_2 <- merge(Sample_MMR,MMRsig_2, by="Sample")
