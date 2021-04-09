@@ -1,7 +1,44 @@
-# Calculate variables for MMRDetect
+
+#' Substitution signature of MMR gene knockouts
+#'
+#' @format A data frame with nine variables:
+#' \describe{
+#' \item{\code{MutationType}}{96 substitution types}
+#' \item{\code{MLH1}}{MLH1 KO}
+#' \item{\code{MSH2}}{MSH2 KO}
+#' \item{\code{MSH6}}{MSH6 KO}
+#' \item{\code{PMS2}}{PM2 KO}
+#' }
+#'
+#'
+"MMRKO_subsig"
+
+#' Indel signature of MMR gene knockouts
+#'
+#' @format A data frame with nine variables:
+#' \describe{
+#' \item{\code{indelsubtype}}{Indel types}
+#' \item{\code{MLH1}}{MLH1 KO}
+#' \item{\code{MSH2}}{MSH2 KO}
+#' \item{\code{MSH6}}{MSH6 KO}
+#' \item{\code{PMS2}}{PM2 KO}
+#' }
+#'
+#'
+"MMRKO_indelsig"
 
 
 
+#' Compute substitution signature exposure for a given catalogue
+#' 
+#' @param sub_cat substitution catalogue
+#' @param tissue_type tissue type
+#' @param MMR_subsig96 mismatch repair gene knockout substitution signatures
+#' @param tissue_subsig96 tissue-specific substitution signatures
+#' 
+#' @return Substitution signature exposure
+#' 
+#' @export
 MMRDetect.compute.subcatalogue.exposure <- function(sub_cat, tissue_type,MMR_subsig96=MMRKO_subsig,tissue_subsig96){
   
   
@@ -94,6 +131,16 @@ MMRDetect.compute.subcatalogue.exposure <- function(sub_cat, tissue_type,MMR_sub
   
   return(MMRsig_sample_melt_dcast) 
 }
+
+#' Compute cosine similarity between given indel profile and MMR gene knockout indel profilesct
+#' 
+#' @param indels list of indels
+#' @param tissue_type tissue type
+#' @param MMR_sig_indel mismatch repair gene knockout indel signatures
+#' 
+#' @return cosine similarity between given indel list and MMR gene knockout indel profiles
+#' 
+#' @export
 MMRDetect.compute.Repindel.similarity <- function(indels, tissue_type,MMR_sig_indel=MMRKO_indelsig){
   
   indel_classied <- indel_classifier(indels)
@@ -137,6 +184,16 @@ MMRDetect.compute.Repindel.similarity <- function(indels, tissue_type,MMR_sig_in
   
   return(MMRsig_2) 
 }
+
+#' Compute cosine similarity between given indel profile and MMR gene knockout indel profiles
+#' 
+#' @param indel_cat  indels catalogue
+#' @param tissue_type tissue type
+#' @param MMR_sig_indel mismatch repair gene knockout indel signatures
+#' 
+#' @return cosine similarity between given indel profile and MMR gene knockout indel profiles
+#' 
+#' @export
 MMRDetect.compute.Repindelcatalogue.similarity <- function(indel_cat, tissue_type,MMR_sig_indel=MMRKO_indelsig){
   
   # Measure the cosine similarity between RepDel, RepIns and RepIndel
@@ -150,7 +207,7 @@ MMRDetect.compute.Repindelcatalogue.similarity <- function(indel_cat, tissue_typ
   names(Sample_MMR) <- c("Sample","RepIndel_num")
   for(i in 2:5){
     for(j in 1:dim(Sample_MMR)[1]){
-      current_sample_indel <- indel_cat[,c("indelsubtype", "type",Sample_MMR[j,"Sample"])]
+      current_sample_indel <- indel_cat[,c("indelsubtype", "type",as.character(Sample_MMR[j,"Sample"]))]
       
       cossim <- Calculae_Cossim_catalogue_RepIndel(current_sample_indel,MMR_sig_indel[,c(1,i)])    
       cossim_allsample <- rbind(cossim_allsample,cossim)
@@ -178,6 +235,15 @@ MMRDetect.compute.Repindelcatalogue.similarity <- function(indel_cat, tissue_typ
   
   return(MMRsig_2) 
 }
+
+#' Compute cosine similarity between given sub profiles and MMR gene knockout sub profiles
+#' 
+#' @param mcat  substitution catalogue
+#' @param scat mismatch repair gene knockout sub signatures
+#' 
+#' @return cosine similarity between given sub profiles and MMR gene knockout sub profiles
+#' 
+#' @export
 MMRDetect.compute.subcatalogue.similarity <- function(mcat,scat=MMRKO_subsig){
   mut_sig <- merge(scat,mcat,by="MutationType")
   sig_cat <- mut_sig[,2:dim(scat)[2]]
@@ -193,10 +259,27 @@ MMRDetect.compute.subcatalogue.similarity <- function(mcat,scat=MMRKO_subsig){
   
 }
 
+#' Compute cosine similarity between one sample and MMR gene knockouts
+#' 
+#' @param SingleSample_classified_indels  classified indel list
+#' @param Sig mismatch repair gene knockout indel signatures
+#' 
+#' @return cosine similarity between given sub profiles and MMR gene knockout sub profiles
+#' 
+#' @export
 Generate_CossimVector_SingleSample_RepIndel <- function(SingleSample_classified_indels, Sig=MMRKO.indelsig){
   mut_catalogue <-  gen_indelmuttype_MMRD(SingleSample_classified_indels,"Sample","indeltype_short")
   return(Calculae_Cossim_catalogue_RepIndel(mut_catalogue, Sig))
 }
+
+#' Compute cosine similarity between one sample indel profile and MMR gene knockouts
+#' 
+#' @param singlesample_indel_catalogue   indel catalogue of one sample
+#' @param Sig mismatch repair gene knockout indel signatures
+#' 
+#' @return cosine similarity between given sub profiles and MMR gene knockout sub profiles
+#' 
+#' @export
 Calculae_Cossim_catalogue_RepIndel <- function(singlesample_indel_catalogue, Sig){
   total_subs_sig <- merge(singlesample_indel_catalogue,Sig, by="indelsubtype")
   
@@ -206,12 +289,30 @@ Calculae_Cossim_catalogue_RepIndel <- function(singlesample_indel_catalogue, Sig
   
   return(c(cossim_del, cossim_ins,cossim))
 }
+
+#' Compute cosine similarity between two vectors
+#' 
+#' @param v1   vector 1
+#' @param v2 vector 2
+#' 
+#' @return cosine similarity
+#' 
+#' @export
 cos_similarity <- function(v1,v2){
   v1v2 <- sum(v1*v2)
   v1_length <- sqrt(sum(v1*v1))
   v2_length <- sqrt(sum(v2*v2))
   return(v1v2/v1_length/v2_length)
 }
+
+#' Compute cosine similarity between a set of catalogue and a given signatures
+#' 
+#' @param mcat   mutation catalogue
+#' @param sigx a given signature
+#' 
+#' @return a list of cosine similarity
+#' 
+#' @export
 SigCossim <- function(mcat, sigx){
   
   return(apply(mcat, 2, function(x) cos_similarity(x,sigx)))

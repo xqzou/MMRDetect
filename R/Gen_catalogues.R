@@ -1,27 +1,27 @@
-library(ggplot2)
-library(plyr) 
-library(reshape2)
-library(gridExtra)
-library(scales)
-library(factoextra)
-library("VariantAnnotation")
-library('GenomicFeatures')
-library(BSgenome.Hsapiens.UCSC.hg19)
-library(signature.tools.lib)
-library("glmnet")
+#library(ggplot2)
+#library(plyr) 
+#library(reshape2)
+#library(gridExtra)
+#library(scales)
+#library(factoextra)
+#library("VariantAnnotation")
+#library('GenomicFeatures')
+#library(BSgenome.Hsapiens.UCSC.hg19)
+#library(signature.tools.lib)
+#library("glmnet")
 
-load("../data/MMRKO_indelsigCT.rda")
-load("../data/indelsig_template.rda")
-load("../data/MMRKO_indelsig.rda")
-load("../data/MMRKO_subsig.rda")
-load("../data/PancanSig.rda")
-MMRDclassifier <- readRDS("../data/MMRDetect.rds")
+#load("../data/MMRKO_indelsigCT.rda")
+#load("../data/indelsig_template.rda")
+#load("../data/MMRKO_indelsig.rda")
+#load("../data/MMRKO_subsig.rda")
+#load("../data/PancanSig.rda")
+#MMRDclassifier <- readRDS("../data/MMRDetect.rds")
+
 #' Generate 96 channel catalogue for substitutions
 #'
 #' @param CTsubs A list of substitutions: Chrom, Pos, Ref, Alt, Sample column
 #' @param SampleCol Sample column
 #' @return 96 channel catalogue for substitutions
-
 #' @export
 GenCatalogue <- function(CTsubs, SampleCol){
   
@@ -29,8 +29,8 @@ GenCatalogue <- function(CTsubs, SampleCol){
   CTsubs[CTsubs$Chrom=="24","Chrom"]="Y"
   
   # add 5' and 3' base information 
-  CTsubs$pre_context <- as.character(getSeq(Hsapiens, paste0('chr',CTsubs$Chrom), CTsubs$Pos-1, CTsubs$Pos-1))
-  CTsubs$rear_context <- as.character(getSeq(Hsapiens, paste0('chr',CTsubs$Chrom), CTsubs$Pos+1, CTsubs$Pos+1))
+  CTsubs$pre_context <- as.character(BSgenome.Hsapiens.UCSC.hg19::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',CTsubs$Chrom), CTsubs$Pos-1, CTsubs$Pos-1))
+  CTsubs$rear_context <- as.character(BSgenome.Hsapiens.UCSC.hg19::getSeq(BSgenome.Hsapiens.UCSC.hg19::Hsapiens, paste0('chr',CTsubs$Chrom), CTsubs$Pos+1, CTsubs$Pos+1))
   
   mutation <- c("C>A","C>G","C>T","T>A","T>C","T>G")
   base <- c("A","C","G","T")
@@ -50,14 +50,14 @@ GenCatalogue <- function(CTsubs, SampleCol){
   #read.table("./MutationType_template.txt", sep = "\t", header = T, as.is = T)
   
   CTsubs_copy <- CTsubs
-  CTsubs[CTsubs$Ref %in% c("G","A"),]$Alt <- as.character(complement(DNAStringSet(CTsubs_copy[CTsubs_copy$Ref %in% c("G","A"),]$Alt)))
-  CTsubs[CTsubs$Ref %in% c("G","A"),]$pre_context <- as.character(complement(DNAStringSet(CTsubs_copy[CTsubs_copy$Ref %in% c("G","A"),]$rear_context)))
-  CTsubs[CTsubs$Ref %in% c("G","A"),]$rear_context <- as.character(complement(DNAStringSet(CTsubs_copy[CTsubs_copy$Ref %in% c("G","A"),]$pre_context)))
-  CTsubs[CTsubs$Ref %in% c("G","A"),]$Ref <- as.character(complement(DNAStringSet(CTsubs_copy[CTsubs_copy$Ref %in% c("G","A"),]$Ref)))
+  CTsubs[CTsubs$Ref %in% c("G","A"),]$Alt <- as.character(Biostrings::complement(Biostrings::DNAStringSet(CTsubs_copy[CTsubs_copy$Ref %in% c("G","A"),]$Alt)))
+  CTsubs[CTsubs$Ref %in% c("G","A"),]$pre_context <- as.character(Biostrings::complement(Biostrings::DNAStringSet(CTsubs_copy[CTsubs_copy$Ref %in% c("G","A"),]$rear_context)))
+  CTsubs[CTsubs$Ref %in% c("G","A"),]$rear_context <- as.character(Biostrings::complement(Biostrings::DNAStringSet(CTsubs_copy[CTsubs_copy$Ref %in% c("G","A"),]$pre_context)))
+  CTsubs[CTsubs$Ref %in% c("G","A"),]$Ref <- as.character(Biostrings::complement(Biostrings::DNAStringSet(CTsubs_copy[CTsubs_copy$Ref %in% c("G","A"),]$Ref)))
   CTsubs$MutationType <- paste0(CTsubs$pre_context,"[",CTsubs$Ref,">",CTsubs$Alt,"]",CTsubs$rear_context)
   sigfile_freq <- data.frame(table(CTsubs[,SampleCol],CTsubs$MutationType))
   names(sigfile_freq) <- c("Sample","MutationType","Freq")
-  control_sigset <-dcast(sigfile_freq,MutationType~Sample,value.var = "Freq")
+  control_sigset <-reshape2::dcast(sigfile_freq,MutationType~Sample,value.var = "Freq")
   control_sigset <- merge(muttype_freq_template,control_sigset,by="MutationType",all.x=T)
   control_sigset[is.na(control_sigset)] <- 0
   
